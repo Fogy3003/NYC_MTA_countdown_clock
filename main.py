@@ -9,16 +9,12 @@ if __name__ == "__main__":
         print("Press CTRL-C to stop.")
         item = 0
         while True:
-            t0 = threading.Thread(target=pull_data_to_flow, args=(["A"], ["A03S"]), daemon=True)
-            t0.start()
-
-            t1 = threading.Thread(target=services_main, args=(), daemon=True)
+            t1 = threading.Thread(target=pull_data_to_flow, args=(["A"], ["A03S"]), daemon=True)
             t1.start()
 
             t2 = threading.Thread(target=ui_main, args=(), daemon=True)
             t2.start()
-            
-            t0.join
+
             t1.join()
             t2.join()
 
