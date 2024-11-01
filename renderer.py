@@ -65,14 +65,34 @@ def make_row(train, height=16, length=64):
     # Return row image if no scrolling is needed
     return [row]
 
+def combine_rows(row1, row2):
+    # Get the dimensions of the rows
+    width = max(row1.width, row2.width)  # Assume rows are the same width
+    height = row1.height + row2.height   # Total height by stacking rows vertically
+
+    # Create a blank image with the combined dimensions
+    combined_image = Image.new("RGB", (width, height), color="black")
+
+    # Paste the first row at the top
+    combined_image.paste(row1, (0, 0))
+
+    # Paste the second row below the first
+    combined_image.paste(row2, (0, row1.height))
+
+    return combined_image
 
 def render(arrivals):
     # route id, last stop, departure time
+    ret_rows = []
     for train in arrivals:
         row = make_row(train)
-        for i, frame in enumerate(row):
-            frame.save(f"train_row_frame_{i}.png")
-        break
+        ret_rows.append()
+    combined_images = []
+    for i in range(30):
+        combined_images.append(combine_rows(ret_rows[0][i], ret_rows[1][i]))
+    return combined_images
+
+            
 
 
     
