@@ -1,4 +1,4 @@
-import time
+import time, datetime
 from rgbmatrix import RGBMatrix, RGBMatrixOptions
 from flow import get_arrivals
 from renderer import render
@@ -6,6 +6,7 @@ from renderer import render
 def main():
   # Configuration for the matrix
   options = RGBMatrixOptions()
+  options.brightness = 30
   options.rows = 32
   options.cols = 64
   options.chain_length = 2
@@ -18,16 +19,19 @@ def main():
 
   images = []
   cached_arrivals = None
+  cached_time = datetime.datetime.now().minute
   while True:
     new_arrivals = get_arrivals()
-    if cached_arrivals != new_arrivals:
+    now_minute = datetime.datetime.now().minute
+    if cached_arrivals != new_arrivals or cached_time != now_minute:
       cached_arrivals = new_arrivals
+      cached_time = now_minute
       images = render(cached_arrivals)
     if images:
       print("displaying")
       for image in images:
         matrix.SetImage(image)
-        time.sleep(1.0/30.0)
+        time.sleep(1.0/24.0)
     else:
       print("polling")
-      time.sleep(3) # poll until get image
+      time.sleep(10) # poll until get image

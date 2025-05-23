@@ -18,10 +18,12 @@ def pull_data_to_flow(train_id, stop_id):
             trains = feed.filter_trips(headed_for_stop_id=stop_id)
             if trains:
                 for train in trains:
-                    arrivals.append([train.route_id, train.headsign_text.split('-')[0], train.departure_time])
+                    if train.departure_time> datetime.datetime.now():
+                        arrivals.append([train.route_id, train.headsign_text.split('-')[0], train.departure_time])
             else:
                 arrivals = [None, None]
 
-        sorted_arrivals = sorted(arrivals, key=lambda x: x[2])
+        sorted_arrivals = sorted(arrivals, key=lambda x: x[2], reverse=False)
+        print(sorted_arrivals)
         set_arrivals((sorted_arrivals + [None, None])[:2])
-        time.sleep(60)
+        time.sleep(30)
