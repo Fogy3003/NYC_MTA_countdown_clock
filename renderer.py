@@ -2,10 +2,17 @@ from PIL import Image, ImageDraw, ImageFont
 from datetime import datetime
 import constants
 import pytz
+import logging
 #import matplotlib.pyplot as plt
 FONT = ImageFont.truetype("./fonts/retro.ttf", size=10.5)
 FONT = ImageFont.load("fonts/mta.pil")
 ny_timezone = pytz.timezone("America/New_York")
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s:%(message)s',
+    filename='renderer.log',
+    filemode='a'
+)
 
 def text_width(text: str) -> int:
   width, _ = FONT.getsize(text)
@@ -22,10 +29,12 @@ def load_needed_bullets(line_id):
         return bullets
 
 def make_row(train, height=16, length=64*2):
+    logging.debug(f"Entering make_row with train={train}")
     if train is None:
         row = Image.new('RGB', (length, height), color="black")
         draw = ImageDraw.Draw(row)
-        retrn [row]*30
+        logging.warning("Received None for train in make_row.")
+        return [row]*30
 
     train_image = load_needed_bullets(train[0])[train[0]]
     # Create a blank row image
@@ -38,9 +47,10 @@ def make_row(train, height=16, length=64*2):
     # Calculate minutes until departure
     now = datetime.now(ny_timezone)
     departure_time = train[2].astimezone(ny_timezone)
-    print(departure_time)
+    logging.debug(f"Departure time: {departure_time}, Now: {now}")
     time_diff = round((departure_time - now).total_seconds() //60)
-    print(time_diff)
+    if time_diff < 0:
+        logging.warning(f"Negative time_diff detected: {time_diff} for train {train}")
     time_text = f"{time_diff}m"
     time_text_bbox = draw.textbbox((0, 0), time_text, font=FONT)  # Get bounding box for time text
     time_text_width = time_text_bbox[2] - time_text_bbox[0]  # Calculate width of time text
@@ -70,9 +80,11 @@ def make_row(train, height=16, length=64*2):
             scroll_frame.paste(train_image, (0, 1))
             scroll_row_images.append(scroll_frame)
             scroll_draw.text((time_start_x, 3), time_text, font=FONT, fill="white")
+        logging.info(f"Scrolling text for train {train[0]}: '{text}'")
         return scroll_row_images
 
     # Return row image if no scrolling is needed
+    logging.debug(f"Exiting make_row for train {train[0]}")
     return [row]*30
 
 def combine_rows(row1, row2):
@@ -92,6 +104,7 @@ def combine_rows(row1, row2):
     return combined_image
 
 def render(arrivals):
+    logging.info(f"Rendering arrivals: {arrivals}")
     # route id, last stop, departure time
     ret_rows = []
     for train in arrivals:
@@ -100,6 +113,7 @@ def render(arrivals):
     combined_images = []
     for i in range(30):
         combined_images.append(combine_rows(ret_rows[0][i], ret_rows[1][i]))
+    logging.info("Render complete.")
     return combined_images
 
             
