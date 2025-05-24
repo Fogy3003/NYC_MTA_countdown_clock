@@ -24,7 +24,7 @@ def pull_data_to_flow(train_id, stop_id):
             )
             for feed in feeds:
                 feed.refresh()
-                logging.info(f"Feed refreshed for {feed.feed_id}")
+                logging.info(f"Feed refreshed")
                 trains = feed.filter_trips(headed_for_stop_id=stop_id)
                 if trains:
                     for train in trains:

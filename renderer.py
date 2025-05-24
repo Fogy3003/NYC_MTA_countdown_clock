@@ -110,14 +110,16 @@ def render(arrivals):
     for train in arrivals:
         row = make_row(train)
         ret_rows.append(row)
+    # Ensure at least two rows for combining
+    while len(ret_rows) < 2:
+        # Create a blank row (same structure as make_row returns)
+        blank_row = make_row(None)
+        ret_rows.append(blank_row)
     combined_images = []
     for i in range(30):
         combined_images.append(combine_rows(ret_rows[0][i], ret_rows[1][i]))
     logging.info("Render complete.")
     return combined_images
-
-            
-
 
     
 
