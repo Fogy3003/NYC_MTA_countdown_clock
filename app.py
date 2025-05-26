@@ -1,8 +1,16 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template
 import os
 import socket
 
 app = Flask(__name__)
+
+# Dictionary to store RFID tag actions
+RFID_ACTIONS = {
+    # Add your RFID tag IDs and their corresponding actions here
+    "TAG1": "action1",
+    "TAG2": "action2",
+    # Example: "123456789": "unlock_door"
+}
 
 def get_ip_address():
     try:
@@ -15,19 +23,26 @@ def get_ip_address():
     except:
         return "Could not determine IP address"
 
-def fun():
-    # Add your fun function logic here
-    print("Fun function was called!")
-    return "Fun function executed successfully!"
+def execute_rfid_action(tag_id):
+    """
+    Execute the action associated with the RFID tag
+    Add your custom actions here
+    """
+    if tag_id in RFID_ACTIONS:
+        action = RFID_ACTIONS[tag_id]
+        print(f"Executing action for tag {tag_id}: {action}")
+        # Add your action execution logic here
+        # For example:
+        # if action == "unlock_door":
+        #     unlock_door()
+        return f"Executed action: {action}"
+    else:
+        print(f"Unknown RFID tag: {tag_id}")
+        return "Unknown tag"
 
 @app.route('/')
 def home():
-    return jsonify({
-        'status': 'success',
-        'message': 'Server is running',
-        'ip_address': get_ip_address(),
-        'port': int(os.environ.get('PORT', 5000))
-    })
+    return render_template('index.html')
 
 @app.route('/health')
 def health_check():
@@ -42,14 +57,22 @@ def handle_message():
     if request.method == 'POST':
         data = request.get_json()
         
-        # Check if the message is 'fun'
-        if data.get('message') == 'fun':
-            result = fun()
-            return jsonify({
-                'status': 'success',
-                'message': 'Fun function was executed',
-                'result': result
-            })
+        # Handle RFID data
+        if data.get('message') == 'rfid':
+            rfid_data = data.get('rfid_data')
+            if rfid_data:
+                result = execute_rfid_action(rfid_data)
+                return jsonify({
+                    'status': 'success',
+                    'message': 'RFID tag processed',
+                    'tag_id': rfid_data,
+                    'result': result
+                })
+            else:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'No RFID data provided'
+                }), 400
         
         return jsonify({
             'status': 'success',
@@ -60,7 +83,7 @@ def handle_message():
         return jsonify({
             'status': 'success',
             'message': 'Send a POST request with your message',
-            'example': {'message': 'fun'}
+            'example': {'message': 'rfid', 'rfid_data': 'TAG1'}
         })
 
 if __name__ == '__main__':

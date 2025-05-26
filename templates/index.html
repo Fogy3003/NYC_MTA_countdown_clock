@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RFID Scanner Control</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        .button {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            width: 200px;
+        }
+        #response {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: left;
+        }
+        .scan-area {
+            border: 2px dashed #4CAF50;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        #status {
+            color: #666;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>RFID Scanner</h1>
+    
+    <div class="scan-area">
+        <h2>Scan RFID Tag</h2>
+        <p id="status">Ready to scan...</p>
+        <button class="button" onclick="startScan()">Start Scanning</button>
+    </div>
+    
+    <div id="response"></div>
+
+    <script>
+        let isScanning = false;
+
+        function startScan() {
+            if (!isScanning) {
+                isScanning = true;
+                document.getElementById('status').textContent = 'Scanning...';
+                document.getElementById('status').style.color = '#4CAF50';
+                
+                // Check if Web NFC is available
+                if ('NDEFReader' in window) {
+                    const ndef = new NDEFReader();
+                    ndef.scan()
+                        .then(() => {
+                            ndef.onreading = event => {
+                                const decoder = new TextDecoder();
+                                for (const record of event.message.records) {
+                                    const text = decoder.decode(record.data);
+                                    sendRFIDData(text);
+                                }
+                            };
+                        })
+                        .catch(error => {
+                            document.getElementById('status').textContent = 'Error: ' + error;
+                            document.getElementById('status').style.color = 'red';
+                            isScanning = false;
+                        });
+                } else {
+                    // Fallback for devices without Web NFC
+                    document.getElementById('status').textContent = 'Web NFC not supported. Using manual input.';
+                    const manualInput = prompt('Enter RFID tag data:');
+                    if (manualInput) {
+                        sendRFIDData(manualInput);
+                    }
+                    isScanning = false;
+                }
+            } else {
+                isScanning = false;
+                document.getElementById('status').textContent = 'Ready to scan...';
+                document.getElementById('status').style.color = '#666';
+            }
+        }
+
+        function sendRFIDData(rfidData) {
+            fetch('/api/message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: 'rfid',
+                    rfid_data: rfidData
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('response').innerHTML = 
+                    `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                document.getElementById('status').textContent = 'Scan complete!';
+                setTimeout(() => {
+                    document.getElementById('status').textContent = 'Ready to scan...';
+                    isScanning = false;
+                }, 2000);
+            })
+            .catch(error => {
+                document.getElementById('response').innerHTML = 
+                    `<pre>Error: ${error}</pre>`;
+                document.getElementById('status').textContent = 'Error occurred';
+                isScanning = false;
+            });
+        }
+    </script>
+</body>
+</html> 
