@@ -15,6 +15,11 @@ def get_ip_address():
     except:
         return "Could not determine IP address"
 
+def fun():
+    # Add your fun function logic here
+    print("Fun function was called!")
+    return "Fun function executed successfully!"
+
 @app.route('/')
 def home():
     return jsonify({
@@ -36,6 +41,16 @@ def health_check():
 def handle_message():
     if request.method == 'POST':
         data = request.get_json()
+        
+        # Check if the message is 'fun'
+        if data.get('message') == 'fun':
+            result = fun()
+            return jsonify({
+                'status': 'success',
+                'message': 'Fun function was executed',
+                'result': result
+            })
+        
         return jsonify({
             'status': 'success',
             'message': 'Received your message',
@@ -44,7 +59,8 @@ def handle_message():
     else:
         return jsonify({
             'status': 'success',
-            'message': 'Send a POST request with your message'
+            'message': 'Send a POST request with your message',
+            'example': {'message': 'fun'}
         })
 
 if __name__ == '__main__':
